@@ -183,7 +183,7 @@ function paystack_link($params)
 
     if( !empty( $gatewayid ) && ($gatewayid != false) ){
         $switch = $params['whmcs_url'].'modules/gateways/paystack/paystackrecurring.php?name='.$customername.'&whmcs='.$params['whmcsurl'].
-        '&authcode='.$gatewayid[0].'&transID='.$codes[1].'&amount='.$amount.'&customerEmail='.$email.'&invoice='.$params['invoiceid'].'&mcheck='.$mcheck;    
+        '&authcode='.$gatewayid[0].'&amount='.$amount.'&customerEmail='.$email.'&invoice='.$params['invoiceid'].'&mcheck='.$mcheck;    
         
          $code = '
          <p><img style="width:140px;" src="'.$paystack_logo_url.'" /></p>
@@ -264,7 +264,6 @@ function paystack_link($params)
 function paystack_capture($params) {
 
    require_once dirname(__FILE__) . '/paystack/functions.php';
-   $gatewayid = "";
 
     $gatewayid = paystack_get_gatewayid($params['clientdetails']['userid']);
     if ($params['testMode'] == 'on') {

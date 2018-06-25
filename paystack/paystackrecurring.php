@@ -11,35 +11,28 @@ $name = $_GET['name'];
 $amount = $_GET['amount'];
 $email = $_GET['customerEmail'];
 
-$result = getInvoiceDetails($invoice, 'apiwgh');
-$invoiceAmount = $result['balance'];
-
-if (($invoiceAmount==0) || ($invoiceAmount=='0.00')){
-	die('This invoice has already been marked as paid.');
-}
 
 $gatewayParams = getGatewayVariables('paystack');
-
-//die(var_dump($gatewayParams));
 
 if ($gatewayParams['testMode'] == 'on') {
     $secretKey = $gatewayParams['testSecretKey'];
 } else {
     $secretKey = $gatewayParams['liveSecretKey'];
 }
-//$postfields['apiKey'] = $gatewayParams['api_key'];
 
+$result = getInvoiceDetails($invoice, $gatewayParams['whmcsuser']);
+$invoiceAmount = $result['balance'];
+
+if (($invoiceAmount==0) || ($invoiceAmount=='0.00')){
+	die('This invoice has already been marked as paid.');
+}
 
 if ($invoiceAmount == $amount){
 	$fullAmount = $amount;
+}else{
+	die('Invoice Amount does not equal amount paid');
 }
-/*else{
-	$fullAmount = $amount;
-	$feeTransaction = 100 * $invoiceAmount;
-}
-$fee = 100 * $fullAmount;
-$actualAmount = $fullAmount - $fee;
-$feeFormated = number_format($fee,2,'.',',');*/
+
 $actualAmountFormated = number_format($fullAmount,2,'.',',');
 
 $mcheck = md5($invoice.$email.$amount);
@@ -73,9 +66,9 @@ if ($request) {
   $result = json_decode($request, true);
 }
 
-//die(json_encode($result));
 $reference = $result['data']['reference'];
 $message = $result['data']['gateway_response'];
+
 if ($fullAmount < 2500) {
 	$fee = $fullAmount*0.015;
 }else{
@@ -94,15 +87,11 @@ if($result['data']['status'] == 'success')
         
 	addinvoicepayment ($invoice, $reference, $fullAmount*100, $fee, 'paystack');
 	 
-	
-	mailsuccess($name,$amount,$feeFormated,$invoice,$reference,$params['clientdetails']['email']);
 	$url = $_GET['whmcs'].'/host/viewinvoice.php?id='.$invoice;	
 	
 	header("location: ".$url);     
 }else{
-	$url = $_GET['whmcs'].'/host/viewinvoice.php?id='.$invoice;	
-  	mailfailure($name,$amount,$invoice,$reference,$result['message'],$email);
-    displayfailure($name,$amount,$feeFormated,$invoice,$reference,$message,$url);
+	$url = $_GET['whmcs'].'/host/viewinvoice.php?id='.$invoice;	  	
 }	  
  
 

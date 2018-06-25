@@ -76,6 +76,13 @@ function paystack_config()
             'Size' => '32',
             'Default' => 'pk_test_xxx'
         ),
+        'whmcsuser' => array(
+            'FriendlyName' => 'WHMCS Username',
+            'Type' => 'text',
+            'Size' => '25',
+            'Default' => '',
+            'Description' => 'Enter your WHMCS API Username here',
+        ),
         'senderemail' => array(
             'FriendlyName' => 'Sender Email',
             'Type' => 'text',
@@ -276,7 +283,7 @@ function paystack_capture($params) {
         return false;
     }else{
         $email = $params['clientdetails']['email'];
-        $fullAmount = $params['amount'];
+        $fullAmount = $params['amount']*100;
         if ($fullAmount < 2500) {
             $fee = $fullAmount*0.015;
         }else{
@@ -285,7 +292,7 @@ function paystack_capture($params) {
         $feeFormated = number_format($fee,2,'.',',');
         $result = array();
         // Pass the customer's authorisation code, email and amount
-        $postdata =  array( 'authorization_code' => $gatewayid[0],'email' => $email, 'amount' => $fullAmount*100);
+        $postdata =  array( 'authorization_code' => $gatewayid[0],'email' => $email, 'amount' => $fullAmount);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL,"https://api.paystack.co/transaction/charge_authorization");
@@ -312,6 +319,7 @@ function paystack_capture($params) {
         if($result['data']['status'] == 'success')
         {   
             $reference = $result['data']['reference'];
+            $gresponse = $result['data']['gateway_response'];
             $amount = $fullAmount;
 
             $output = "Transaction ref: " . $reference
@@ -319,17 +327,17 @@ function paystack_capture($params) {
                     . "\r\nStatus: succeeded";  
             logtransaction ('Paystack', $output , "Successful payment of invoice #{$invoice}");
                 
-            addinvoicepayment ($invoice, $reference, $fullAmount*100, $fee, 'paystack');
+            addinvoicepayment ($invoice, $reference, $fullAmount, $fee, 'paystack');
              
             
             mailsuccess($name,$amount,$feeFormated,$invoice,$reference,$params['clientdetails']['email']);
             $url = $_GET['whmcs'].'/host/viewinvoice.php?id='.$invoice;
-            /*echo $url;
-            die();*/
-            
-            header("location: ".$url);     
+            return array( 'status' => 'success', 'transid' => $reference ,'fee' => $feeFormated, 'rawdata' => json_encode($amount,$invoice,$reference) );
+              
         }else{
+            logtransaction ('Paystack', $resp , $gresponse);
             mailfailure($name,$amount,$invoice,$reference,$result['message'],$email);
+            return array( 'status' => 'error', 'rawdata' => json_encode($amount,$invoiceid,$gresponse) );
            //displayfailure($name,$amount,$invoice,$resp['OrderStatus']);
         }     
          

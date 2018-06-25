@@ -54,7 +54,7 @@ if(strtolower(filter_input(INPUT_GET, 'go'))==='standard'){
     $email = filter_input(INPUT_GET, 'email');
     $phone = filter_input(INPUT_GET, 'phone');
     $customername = filter_input(INPUT_GET, 'customername');
-    if ($fullAmount < 2500) {
+    if ($amountinkobo < 2500) {
         $fee = $amountinkobo*0.015;
     }else{        
         $fee = ($amountinkobo*0.015)+100;
@@ -232,28 +232,7 @@ if ($success) {
      * @param float $paymentFee      Payment fee (optional)
      * @param string $gatewayModule  Gateway module name
      */
-    addInvoicePayment($invoiceId, $trxref, $amount, $feeFormated, $gatewayModuleName);
-
-    $subject = "Successful Paystack Payment of NGN{$amount} (Invoice #{$invoiceid})";
-    $message = "<p>Dear $customername,</p>
-<p>You have just made a successful payment for the invoice #{$invoiceid} using Paystack on {$whmcsurl}. Find the details below.</p><p>Status: <strong>Successful</strong></p><p>Amount: <strong>N$amount</strong> (Fee: N$feeFormated) </p><p>Transaction Ref No: <strong>$trxref</strong></p><br />
-<p>If you have any issues with this transaction, do not hesitate to send us a mail at {$senderemail} stating the transaction reference number.</p>
-
---------------------------------
-<p>You can login to your client area to view your invoice by clicking this link: <a href='$whmcsurl/viewinvoice.php?id={$invoiceid}'>$whmcsurl/viewinvoice.php?id={$invoiceid}</a></p>
-
-<p>$sitename</p>";    
-
-    $command = 'SendEmail';
-    $postData = array(                  
-        'id' => $invoiceresults['userid'],         
-        'customtype' => 'general',
-        'customsubject' => $subject,
-        'custommessage' => $message,        
-    );
-    $adminuser = $whmcsuser; // Optional for WHMCS 7.2 and later
-
-    $results = localAPI($command, $postData, $adminuser);
+    addInvoicePayment($invoiceId, $trxref, $amount, $feeFormated, $gatewayModuleName);    
 
     // load invoice
     $isSSL = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443);
